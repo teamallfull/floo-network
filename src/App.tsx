@@ -1,8 +1,45 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+require("dotenv").config();
+import React, { Component } from "react";
+import logo from "./logo.svg";
+import "./App.css";
+import Peer from "peerjs";
 
+let peer: Peer;
+let connection: any;
 class App extends Component {
+  constructor(props: any) {
+    super(props);
+  }
+
+  componentDidMount() {
+    peer = new Peer("leedobryden", {
+      debug: 3
+    });
+    connection = peer.connect("jonnynabors");
+    console.log("peer", peer);
+    console.log("connection", connection);
+
+    peer.on("connection", conn => {
+      console.log(conn);
+      console.log("connection from peer");
+
+      conn.on("data", data => {
+        // Will print 'hi!'
+        console.log(data);
+      });
+    });
+
+    connection.on("open", (msg: any) => {
+      console.log("logging with message:", msg);
+
+      connection.send("hi!");
+    });
+
+    connection.on("error", (error: any) => {
+      console.log(error);
+    });
+  }
+
   render() {
     return (
       <div className="App">
