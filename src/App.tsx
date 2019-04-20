@@ -4,22 +4,30 @@ import logo from "./logo.svg";
 import "./App.css";
 import Peer from "peerjs";
 
-let peer: Peer;
-let connection: any;
-class App extends Component {
+interface State {
+  peer: Peer;
+  connection: any;
+  connectionId: string;
+  message: string;
+}
+class App extends Component<{}, State> {
   constructor(props: any) {
     super(props);
+    this.state = {
+      peer: new Peer("jonnynabors", {
+        debug: 3
+      }),
+      connection: "",
+      connectionId: "",
+      message: ""
+    };
   }
 
   componentDidMount() {
-    peer = new Peer("leedobryden", {
-      debug: 3
-    });
-    connection = peer.connect("jonnynabors");
-    console.log("peer", peer);
-    console.log("connection", connection);
+    console.log("peer", this.state.peer);
+    console.log("connection", this.state.connection);
 
-    peer.on("connection", conn => {
+    this.state.peer.on("connection", conn => {
       console.log(conn);
       console.log("connection from peer");
 
@@ -28,34 +36,60 @@ class App extends Component {
         console.log(data);
       });
     });
+  }
 
-    connection.on("open", (msg: any) => {
+  openConnection = () => {
+    this.setState(
+      {
+        connection: this.state.peer.connect(this.state.connectionId)
+      },
+      this.connect
+    );
+  };
+
+  connect = () => {
+    this.state.connection.on("open", (msg: any) => {
       console.log("logging with message:", msg);
 
-      connection.send("hi!");
+      this.state.connection.send("hi!");
     });
 
-    connection.on("error", (error: any) => {
+    this.state.connection.on("error", (error: any) => {
       console.log(error);
     });
+  };
+
+  handleConnectionId = (connectionId: string) => {
+    this.setState({
+      connectionId
+    });
+  };
+
+  updateMessage = (message: string) => {
+    this.setState({
+      message
+    })
+  }
+
+  sendMessage = () => {
+    this.state.connection.send(this.state.message);
   }
 
   render() {
     return (
       <div className="App">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
+          <input
+            type="text"
+            onChange={e => this.handleConnectionId(e.target.value)}
+          />
+          <button type="button" onClick={this.openConnection}>
+            Connect
+          </button>
+          <input type="text" onChange={e => this.updateMessage(e.target.value)}></input>
+          <button type="button" onClick={this.sendMessage}>
+            Send Message
+          </button>
         </header>
       </div>
     );
