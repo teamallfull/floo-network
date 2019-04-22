@@ -2,7 +2,8 @@ require("dotenv").config();
 import React, { Component } from "react";
 import "./App.css";
 import Peer from "peerjs";
-import { SimpleMessage } from "./types";
+import { SimpleMessage } from "./store/chat/types";
+import ChatHistory from "./components/ChatHistory";
 
 interface State {
   peer: Peer;
@@ -138,17 +139,6 @@ class App extends Component<{}, State> {
     });
   };
 
-  renderChatMessages = () => {
-    return this.state.chats.map((chat, index) => (
-      <div
-        key={index}
-        className={chat.author === "Them" ? "server-text" : "you-text"}
-      >
-        {chat.author}: {chat.message}
-      </div>
-    ));
-  };
-
   render() {
     return (
       <div className="App">
@@ -189,7 +179,7 @@ class App extends Component<{}, State> {
           <button type="button" onClick={this.call}>
             Call
           </button>
-          <div className="chatbox">{this.renderChatMessages()}</div>
+          <ChatHistory chats={[]} />
         </div>
       </div>
     );
