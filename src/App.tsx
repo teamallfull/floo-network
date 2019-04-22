@@ -4,7 +4,15 @@ import "./App.css";
 import Peer from "peerjs";
 import { SimpleMessage } from "./store/chat/types";
 import ChatHistory from "./components/ChatHistory";
+import { AppState } from "./store/store";
+import { connect } from "react-redux";
+import { Dispatch } from "redux";
+import { sendMessage } from "./store/chat/actions";
 
+interface Props {
+  sendMessage: (message: SimpleMessage) => void;
+  chats: SimpleMessage[];
+}
 interface State {
   peer: Peer;
   peerId: string;
@@ -12,9 +20,8 @@ interface State {
   connectionId: string;
   message: string;
   videoSource: string;
-  chats: SimpleMessage[];
 }
-class App extends Component<{}, State> {
+class App extends Component<Props, State> {
   constructor(props: any) {
     super(props);
     this.state = {
@@ -25,8 +32,7 @@ class App extends Component<{}, State> {
       connection: "",
       connectionId: "",
       message: "",
-      videoSource: "",
-      chats: []
+      videoSource: ""
     };
   }
 
@@ -48,13 +54,9 @@ class App extends Component<{}, State> {
           });
 
           conn.on("data", data => {
-            let currentChats = this.state.chats;
-            currentChats.push({
+            this.props.sendMessage({
               author: "Them",
               message: data
-            });
-            this.setState({
-              chats: currentChats
             });
           });
 
@@ -110,13 +112,9 @@ class App extends Component<{}, State> {
 
   sendMessage = () => {
     this.state.connection.send(this.state.message);
-    let chats = this.state.chats;
-    chats.push({
+    this.props.sendMessage({
       author: "You",
       message: this.state.message
-    });
-    this.setState({
-      message: ""
     });
   };
 
@@ -179,11 +177,22 @@ class App extends Component<{}, State> {
           <button type="button" onClick={this.call}>
             Call
           </button>
-          <ChatHistory chats={[]} />
+          <ChatHistory chats={this.props.chats} />
         </div>
       </div>
     );
   }
 }
 
-export default App;
+const mapStateToProps = (state: AppState) => ({
+  chats: state.chat.chats
+});
+
+const mapDispatchToProps = (dispatch: Dispatch) => ({
+  sendMessage: (value: SimpleMessage) => dispatch(sendMessage(value))
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(App);

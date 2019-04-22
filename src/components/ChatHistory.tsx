@@ -1,6 +1,5 @@
 import React from "react";
-import { ChatState, SimpleMessage } from "../store/chat/types";
-import { connect } from "react-redux";
+import { SimpleMessage } from "../store/chat/types";
 
 interface Props {
   chats: SimpleMessage[];
@@ -21,11 +20,4 @@ const ChatHistory = (props: Props) => {
   return <div className="chatbox">{renderChatMessages()}</div>;
 };
 
-const mapStateToProps = (state: ChatState) => ({
-  chat: state.chats
-});
-
-export default connect(
-  mapStateToProps,
-  {}
-)(ChatHistory);
+export default ChatHistory;

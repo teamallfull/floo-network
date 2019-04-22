@@ -10,6 +10,7 @@ export function chatReducer(
 ): ChatState {
   switch (action.type) {
     case SEND_MESSAGE:
+      console.log(action);
       return {
         chats: [...state.chats, action.payload]
       };
