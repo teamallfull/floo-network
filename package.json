@@ -30,6 +30,7 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "@types/peerjs": "0.0.30"
+    "@types/peerjs": "0.0.30",
+    "@types/react-redux": "7.0.8"
   }
 }

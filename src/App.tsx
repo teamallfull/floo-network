@@ -2,11 +2,7 @@ require("dotenv").config();
 import React, { Component } from "react";
 import "./App.css";
 import Peer from "peerjs";
-
-interface SimpleMessage {
-  author: string;
-  message: string;
-}
+import { SimpleMessage } from "./types";
 
 interface State {
   peer: Peer;
