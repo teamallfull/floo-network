@@ -8,178 +8,141 @@ import { AppState } from "./store/store";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { sendMessage } from "./store/chat/actions";
+import { Host } from "./components/Host";
+import Connection from "./components/Connection";
+import Header from "./components/Header";
 
 interface Props {
   sendMessage: (message: SimpleMessage) => void;
   chats: SimpleMessage[];
 }
-interface State {
-  peer: Peer;
-  peerId: string;
-  connection: any;
-  connectionId: string;
-  message: string;
-  videoSource: string;
-}
+const initialState = {
+  peer: new Peer("", {
+    debug: 3
+  }),
+  connection: "",
+  message: "",
+  createPeer: (peerName: string) => {
+    initialState.peer = new Peer(peerName, {
+      debug: 3
+    });
+  },
+  createConnection: (connectionName: string) => {
+    // @ts-ignore
+    initialState.connection = initialState.peer.connect(connectionName);
+  }
+};
+
+type State = Readonly<typeof initialState>;
+export const AppContext = React.createContext(initialState);
 class App extends Component<Props, State> {
+  readonly state: State = initialState;
   constructor(props: any) {
     super(props);
-    this.state = {
-      peer: new Peer("", {
-        debug: 3
-      }),
-      peerId: "",
-      connection: "",
-      connectionId: "",
-      message: "",
-      videoSource: ""
-    };
   }
 
-  createPeer = () => {
-    // TODO: Only create a peer that the user defines a name for
-    // currently in the state declaration, we create one
-    this.setState(
-      {
-        peer: new Peer(this.state.peerId, {
-          debug: 3
-        })
-      },
-      () => {
-        this.state.peer.on("connection", conn => {
-          console.log(conn);
-          console.log(this.state.peer.id);
-          this.setState({
-            peerId: this.state.peer.id
-          });
+  // createPeer = () => {
+  //   // TODO: Only create a peer that the user defines a name for
+  //   // currently in the state declaration, we create one
+  //   this.setState(
+  //     {
+  //       peer: new Peer(this.state.peerId, {
+  //         debug: 3
+  //       })
+  //     },
+  //     () => {
+  //       this.state.peer.on("connection", conn => {
+  //         console.log(conn);
+  //         console.log(this.state.peer.id);
+  //         this.setState({
+  //           peerId: this.state.peer.id
+  //         });
 
-          conn.on("data", data => {
-            this.props.sendMessage({
-              author: "Them",
-              message: data
-            });
-          });
+  //         conn.on("data", data => {
+  //           this.props.sendMessage({
+  //             author: "Them",
+  //             message: data
+  //           });
+  //         });
 
-          this.state.peer.on("call", async incomingCall => {
-            const mediaStream = await navigator.mediaDevices.getUserMedia({
-              video: false,
-              audio: true
-            });
-            incomingCall.answer(mediaStream);
-            incomingCall.on("stream", remoteStream => {
-              console.log("remote stream", remoteStream);
-            });
-          });
-        });
-      }
-    );
-  };
+  //         this.state.peer.on("call", async incomingCall => {
+  //           const mediaStream = await navigator.mediaDevices.getUserMedia({
+  //             video: false,
+  //             audio: true
+  //           });
+  //           incomingCall.answer(mediaStream);
+  //           incomingCall.on("stream", remoteStream => {
+  //             console.log("remote stream", remoteStream);
+  //           });
+  //         });
+  //       });
+  //     }
+  //   );
+  // };
 
-  openConnection = () => {
-    this.setState(
-      {
-        connection: this.state.peer.connect(this.state.connectionId)
-      },
-      this.connect
-    );
-  };
+  // openConnection = () => {
+  //   this.setState(
+  //     {
+  //       connection: this.state.peer.connect(this.state.connectionId)
+  //     },
+  //     this.connect
+  //   );
+  // };
 
-  connect = () => {
-    this.state.connection.on("open", (msg: any) => {
-      this.state.connection.send("hi!");
-    });
+  // connect = () => {
+  //   this.state.connection.on("open", (msg: any) => {
+  //     this.state.connection.send("hi!");
+  //   });
 
-    this.state.connection.on("error", (error: any) => {
-      console.log(error);
-    });
-  };
+  //   this.state.connection.on("error", (error: any) => {
+  //     console.log(error);
+  //   });
+  // };
 
-  handleConnectionId = (connectionId: string) => {
-    this.setState({
-      connectionId
-    });
-  };
+  // handleConnectionId = (connectionId: string) => {
+  //   this.setState({
+  //     connectionId
+  //   });
+  // };
 
-  updateMessage = (message: string) => {
-    this.setState({
-      message
-    });
-  };
+  // updateMessage = (message: string) => {
+  //   this.setState({
+  //     message
+  //   });
+  // };
 
-  updatePeerId = (peerId: string) => {
-    this.setState({ peerId });
-  };
+  // updatePeerId = (peerId: string) => {
+  //   this.setState({ peerId });
+  // };
 
-  sendMessage = () => {
-    this.state.connection.send(this.state.message);
-    this.props.sendMessage({
-      author: "You",
-      message: this.state.message
-    });
-  };
-
-  call = async () => {
-    const mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: false,
-      audio: true
-    });
-    const audioCall = this.state.peer.call(
-      this.state.connectionId,
-      mediaStream
-    );
-    audioCall.on("stream", remoteStream => {
-      // do stuff!
-      console.log(remoteStream);
-    });
-
-    audioCall.on("error", error => {
-      console.log(error);
-    });
-  };
+  // sendMessage = () => {
+  //   this.state.connection.send(this.state.message);
+  //   this.props.sendMessage({
+  //     author: "You",
+  //     message: this.state.message
+  //   });
+  // };
 
   render() {
     return (
-      <div className="App">
-        <div className="container">
-          <div className="header">
-            <h1>Floo Network</h1>
-            {this.state.peerId ? (
-              <h3>Your Peer Id is {this.state.peerId}</h3>
-            ) : (
-              <h3>Please create a Peer Id</h3>
-            )}
-          </div>
-          <div className="connection">
-            <input
+      <AppContext.Provider value={this.state}>
+        <div className="App">
+          <div className="container">
+            <Header />
+            <div className="connection" />
+            <Host />
+            <Connection />
+            {/* <input
               type="text"
-              placeholder="Create a Unique Peer Id"
-              onChange={e => this.updatePeerId(e.target.value)}
+              onChange={e => this.updateMessage(e.target.value)}
             />
-            <button type="button" onClick={this.createPeer}>
-              Create Peer
-            </button>
-            <input
-              type="text"
-              placeholder="Enter Connection Id"
-              onChange={e => this.handleConnectionId(e.target.value)}
-            />
-            <button type="button" onClick={this.openConnection}>
-              Connect
-            </button>
+            <button type="button" onClick={this.sendMessage}>
+              Send Message
+            </button> */}
+            <ChatHistory chats={this.props.chats} />
           </div>
-          <input
-            type="text"
-            onChange={e => this.updateMessage(e.target.value)}
-          />
-          <button type="button" onClick={this.sendMessage}>
-            Send Message
-          </button>
-          <button type="button" onClick={this.call}>
-            Call
-          </button>
-          <ChatHistory chats={this.props.chats} />
         </div>
-      </div>
+      </AppContext.Provider>
     );
   }
 }
