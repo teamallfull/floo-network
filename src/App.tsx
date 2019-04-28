@@ -1,46 +1,47 @@
 require("dotenv").config();
-import React, { Component } from "react";
+import React, { Component, useEffect } from "react";
 import "./App.css";
 import Peer from "peerjs";
-import { SimpleMessage } from "./store/chat/types";
-import ChatHistory from "./components/ChatHistory";
-import { AppState } from "./store/store";
-import { connect } from "react-redux";
-import { Dispatch } from "redux";
-import { sendMessage } from "./store/chat/actions";
 import { Host } from "./components/Host";
-import Connection from "./components/Connection";
-import Header from "./components/Header";
 
-interface Props {
-  sendMessage: (message: SimpleMessage) => void;
-  chats: SimpleMessage[];
-}
-const initialState = {
-  peer: new Peer("", {
-    debug: 3
-  }),
-  connection: "",
-  message: "",
-  createPeer: (peerName: string) => {
-    initialState.peer = new Peer(peerName, {
-      debug: 3
-    });
-  },
-  createConnection: (connectionName: string) => {
-    // @ts-ignore
-    initialState.connection = initialState.peer.connect(connectionName);
-  }
+type Network = {
+  peer: Peer;
 };
 
-type State = Readonly<typeof initialState>;
-export const AppContext = React.createContext(initialState);
-class App extends Component<Props, State> {
-  readonly state: State = initialState;
-  constructor(props: any) {
-    super(props);
-  }
+export const NetworkContext = React.createContext<Partial<Network>>({});
+function NetworkProvider(props: any) {
+  const [peer, setPeer] = React.useState(new Peer("", { debug: 3 }));
 
+  return <NetworkContext.Provider value={{ peer }} {...props} />;
+}
+
+export function useNetwork() {
+  const context = React.useContext(NetworkContext);
+  if (!context) {
+    throw new Error(`useNetwork must be used within a NetworkProvider `);
+  }
+  let { peer } = context;
+  const createNewPeer = (peerId: string) => {
+    context.peer = new Peer(peerId, { debug: 3 });
+  };
+
+  useEffect(() => {
+    if (peer)
+      peer.on("open", connectionId => {
+        console.log(connectionId);
+      });
+  });
+
+  useEffect(() => {
+    if (peer) peer.on("connection", conn => console.log(conn));
+  });
+
+  return {
+    peer,
+    createNewPeer
+  };
+}
+function App() {
   // createPeer = () => {
   //   // TODO: Only create a peer that the user defines a name for
   //   // currently in the state declaration, we create one
@@ -123,39 +124,16 @@ class App extends Component<Props, State> {
   //   });
   // };
 
-  render() {
-    return (
-      <AppContext.Provider value={this.state}>
-        <div className="App">
-          <div className="container">
-            <Header />
-            <div className="connection" />
-            <Host />
-            <Connection />
-            {/* <input
-              type="text"
-              onChange={e => this.updateMessage(e.target.value)}
-            />
-            <button type="button" onClick={this.sendMessage}>
-              Send Message
-            </button> */}
-            <ChatHistory chats={this.props.chats} />
-          </div>
-        </div>
-      </AppContext.Provider>
-    );
-  }
+  return (
+    <div className="App">
+      <div className="container">
+        <div className="connection" />
+        <NetworkProvider>
+          <Host />
+        </NetworkProvider>
+      </div>
+    </div>
+  );
 }
 
-const mapStateToProps = (state: AppState) => ({
-  chats: state.chat.chats
-});
-
-const mapDispatchToProps = (dispatch: Dispatch) => ({
-  sendMessage: (value: SimpleMessage) => dispatch(sendMessage(value))
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(App);
+export default App;
