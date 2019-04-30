@@ -1,18 +1,34 @@
 require("dotenv").config();
-import React, { Component, useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import "./App.css";
-import Peer from "peerjs";
+import Peer, { DataConnection } from "peerjs";
 import { Host } from "./components/Host";
+import Connection from "./components/Connection";
+import { SimpleMessage } from "./Types";
+import ChatHistory from "./components/ChatHistory";
 
 type Network = {
   peer: Peer;
+  connectionId: string;
+  chats: SimpleMessage[];
+  setChats: Function;
+  setConnectionId: Function;
 };
 
-export const NetworkContext = React.createContext<Partial<Network>>({});
+export const NetworkContext = React.createContext<Network | undefined>(
+  undefined
+);
+
 function NetworkProvider(props: any) {
   const [peer, setPeer] = React.useState(new Peer("", { debug: 3 }));
-
-  return <NetworkContext.Provider value={{ peer }} {...props} />;
+  const [connectionId, setConnectionId] = React.useState("");
+  const [chats, setChats] = React.useState([]);
+  return (
+    <NetworkContext.Provider
+      value={{ peer, connectionId, chats, setChats, setConnectionId }}
+      {...props}
+    />
+  );
 }
 
 export function useNetwork() {
@@ -20,25 +36,62 @@ export function useNetwork() {
   if (!context) {
     throw new Error(`useNetwork must be used within a NetworkProvider `);
   }
-  let { peer } = context;
+  let { peer, chats, connectionId, setChats, setConnectionId } = context;
   const createNewPeer = (peerId: string) => {
     context.peer = new Peer(peerId, { debug: 3 });
   };
 
+  const createConnection = (connectionId: string) => {
+    setConnectionId(connectionId);
+    if (context.peer) context.peer.connect(connectionId);
+  };
+
+  const sendMessageToConnection = (message: string) => {
+    if (context.peer.connections[connectionId]) {
+      context.peer.connections[connectionId][0].send(message);
+    }
+  };
+
   useEffect(() => {
+    console.log("in first effect");
     if (peer)
       peer.on("open", connectionId => {
         console.log(connectionId);
       });
-  });
+  }, [peer, connectionId]);
 
   useEffect(() => {
-    if (peer) peer.on("connection", conn => console.log(conn));
-  });
+    console.log("in second effect");
+    if (peer)
+      peer.on("connection", conn => {
+        setConnectionId(conn);
+        setChats([
+          ...chats,
+          {
+            author: "Them",
+            message: `You are now receiving messages from ${conn.peer}!`
+          }
+        ]);
+        conn.on("data", message => {
+          setChats([
+            ...chats,
+            {
+              author: "Them",
+              message: `You are connected with ${message}!`
+            }
+          ]);
+        });
+      });
+  }, [peer]);
 
   return {
     peer,
-    createNewPeer
+    createNewPeer,
+    createConnection,
+    chats,
+    setChats,
+    sendMessageToConnection,
+    setConnectionId
   };
 }
 function App() {
@@ -51,35 +104,6 @@ function App() {
   //         debug: 3
   //       })
   //     },
-  //     () => {
-  //       this.state.peer.on("connection", conn => {
-  //         console.log(conn);
-  //         console.log(this.state.peer.id);
-  //         this.setState({
-  //           peerId: this.state.peer.id
-  //         });
-
-  //         conn.on("data", data => {
-  //           this.props.sendMessage({
-  //             author: "Them",
-  //             message: data
-  //           });
-  //         });
-
-  //         this.state.peer.on("call", async incomingCall => {
-  //           const mediaStream = await navigator.mediaDevices.getUserMedia({
-  //             video: false,
-  //             audio: true
-  //           });
-  //           incomingCall.answer(mediaStream);
-  //           incomingCall.on("stream", remoteStream => {
-  //             console.log("remote stream", remoteStream);
-  //           });
-  //         });
-  //       });
-  //     }
-  //   );
-  // };
 
   // openConnection = () => {
   //   this.setState(
@@ -130,6 +154,8 @@ function App() {
         <div className="connection" />
         <NetworkProvider>
           <Host />
+          <Connection />
+          <ChatHistory />
         </NetworkProvider>
       </div>
     </div>

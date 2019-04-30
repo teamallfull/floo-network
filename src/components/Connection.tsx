@@ -1,26 +1,26 @@
 import React from "react";
-import { AppContext } from "../App";
+import { useNetwork } from "../App";
 
 const Connection = () => {
   const [connectionId, setConnectionId] = React.useState("");
+  const { createConnection } = useNetwork();
+
+  function updateConnection() {
+    createConnection(connectionId);
+    setConnectionId("");
+  }
   return (
-    <AppContext.Consumer>
-      {context => (
-        <>
-          <input
-            type="text"
-            placeholder="Enter Connection Id"
-            onChange={e => setConnectionId(e.target.value)}
-          />
-          <button
-            type="button"
-            onClick={() => context.createConnection(connectionId)}
-          >
-            Connect
-          </button>
-        </>
-      )}
-    </AppContext.Consumer>
+    <>
+      <input
+        type="text"
+        value={connectionId}
+        placeholder="Enter Connection Id"
+        onChange={e => setConnectionId(e.target.value)}
+      />
+      <button type="button" onClick={updateConnection}>
+        Connect
+      </button>
+    </>
   );
 };
 

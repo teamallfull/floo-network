@@ -1,13 +1,11 @@
-import React from "react";
-import { SimpleMessage } from "../store/chat/types";
+import React, { useState } from "react";
+import { useNetwork } from "../App";
 
-interface Props {
-  chats: SimpleMessage[];
-}
-
-const ChatHistory = (props: Props) => {
+const ChatHistory = () => {
+  const [message, setMessage] = useState("");
+  const { chats, setChats, sendMessageToConnection } = useNetwork();
   function renderChatMessages() {
-    return props.chats.map((chat, index) => (
+    return chats!.map((chat, index) => (
       <div
         key={index}
         className={chat.author === "Them" ? "server-text" : "you-text"}
@@ -17,7 +15,30 @@ const ChatHistory = (props: Props) => {
     ));
   }
 
-  return <div className="chatbox">{renderChatMessages()}</div>;
+  function sendMessage() {
+    sendMessageToConnection(message);
+    setChats([
+      ...chats,
+      {
+        author: "You",
+        message
+      }
+    ]);
+  }
+
+  return (
+    <div>
+      <div className="chatbox">{renderChatMessages()}</div>;
+      <input
+        type="text"
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+      />
+      <button type="button" onClick={sendMessage}>
+        Send Message
+      </button>
+    </div>
+  );
 };
 
 export default ChatHistory;
