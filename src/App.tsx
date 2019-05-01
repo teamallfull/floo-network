@@ -11,8 +11,9 @@ type Network = {
   peer: Peer;
   connectionId: string;
   chats: SimpleMessage[];
-  setChats: Function;
   setConnectionId: Function;
+  setChats: Function;
+  connection: DataConnection;
 };
 
 export const NetworkContext = React.createContext<Network | undefined>(
@@ -23,9 +24,17 @@ function NetworkProvider(props: any) {
   const [peer, setPeer] = React.useState(new Peer("", { debug: 3 }));
   const [connectionId, setConnectionId] = React.useState("");
   const [chats, setChats] = React.useState([]);
+  const [connection, setConnection] = React.useState({});
   return (
     <NetworkContext.Provider
-      value={{ peer, connectionId, chats, setChats, setConnectionId }}
+      value={{
+        peer,
+        connectionId,
+        chats,
+        setConnectionId,
+        setChats,
+        connection
+      }}
       {...props}
     />
   );
@@ -36,14 +45,22 @@ export function useNetwork() {
   if (!context) {
     throw new Error(`useNetwork must be used within a NetworkProvider `);
   }
-  let { peer, chats, connectionId, setChats, setConnectionId } = context;
+  let {
+    peer,
+    chats,
+    connectionId,
+    setConnectionId,
+    setChats,
+    connection
+  } = context;
   const createNewPeer = (peerId: string) => {
     context.peer = new Peer(peerId, { debug: 3 });
+    console.log("creating new peer");
   };
 
   const createConnection = (connectionId: string) => {
     setConnectionId(connectionId);
-    if (context.peer) context.peer.connect(connectionId);
+    if (context.peer) connection = context.peer.connect(connectionId);
   };
 
   const sendMessageToConnection = (message: string) => {
@@ -52,46 +69,37 @@ export function useNetwork() {
     }
   };
 
-  useEffect(() => {
-    console.log("in first effect");
-    if (peer)
-      peer.on("open", connectionId => {
-        console.log(connectionId);
-      });
-  }, [peer, connectionId]);
+  const updateGlobalChat = (message: SimpleMessage) => {
+    setChats([...chats, message]);
+  };
 
-  useEffect(() => {
-    console.log("in second effect");
-    if (peer)
-      peer.on("connection", conn => {
-        setConnectionId(conn);
-        setChats([
-          ...chats,
-          {
-            author: "Them",
-            message: `You are now receiving messages from ${conn.peer}!`
-          }
-        ]);
-        conn.on("data", message => {
-          setChats([
-            ...chats,
-            {
-              author: "Them",
-              message: `You are connected with ${message}!`
-            }
-          ]);
-        });
+  const updateGlobalChatForThem = (message: SimpleMessage) => {
+    setChats([...chats, message]);
+  };
+
+  if (peer) console.log("so much stuff");
+  peer.on("connection", conn => {
+    setConnectionId(conn);
+    updateGlobalChat({
+      author: "Them",
+      message: `You are now receiving messages from ${conn.peer}!`
+    });
+    conn.on("data", message => {
+      updateGlobalChatForThem({
+        author: "Them",
+        message: `${message}!`
       });
-  }, [peer]);
+    });
+  });
 
   return {
     peer,
     createNewPeer,
     createConnection,
     chats,
-    setChats,
     sendMessageToConnection,
-    setConnectionId
+    setConnectionId,
+    updateGlobalChat
   };
 }
 function App() {

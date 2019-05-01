@@ -3,7 +3,7 @@ import { useNetwork } from "../App";
 
 const ChatHistory = () => {
   const [message, setMessage] = useState("");
-  const { chats, setChats, sendMessageToConnection } = useNetwork();
+  const { chats, sendMessageToConnection, updateGlobalChat } = useNetwork();
   function renderChatMessages() {
     return chats!.map((chat, index) => (
       <div
@@ -17,13 +17,10 @@ const ChatHistory = () => {
 
   function sendMessage() {
     sendMessageToConnection(message);
-    setChats([
-      ...chats,
-      {
-        author: "You",
-        message
-      }
-    ]);
+    updateGlobalChat({
+      author: "You",
+      message
+    });
   }
 
   return (
