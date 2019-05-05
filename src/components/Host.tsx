@@ -1,9 +1,17 @@
 import React from "react";
 import { useNetwork } from "../App";
+import { AppState } from "../store/store";
+import { Dispatch } from "redux";
+import { updatePeerId } from "../store/network/actions";
+import { connect } from "react-redux";
+import { NetworkState } from "../store/network/types";
 
-export function Host() {
+interface Props {
+  peerId: string | undefined;
+}
+function Host(props: Props) {
   const [peerId, setPeerId] = React.useState("");
-  const { peer, createNewPeer } = useNetwork();
+  const { createNewPeer } = useNetwork();
 
   function updatePeer() {
     createNewPeer(peerId);
@@ -13,8 +21,8 @@ export function Host() {
     <>
       <div className="header">
         <h1>Floo Network</h1>
-        {peer ? (
-          <h3>Your Peer Id is {peer!.id}</h3>
+        {props.peerId ? (
+          <h3>Your Peer Id is {props.peerId}</h3>
         ) : (
           <h3>Please create a Peer Id</h3>
         )}
@@ -31,3 +39,16 @@ export function Host() {
     </>
   );
 }
+
+const mapStateToProps = (state: AppState) => ({
+  peerId: state.network.peerId
+});
+
+const mapDispatchToProps = (dispatch: Dispatch) => ({
+  updatePeerId: (value: string) => dispatch(updatePeerId(value))
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Host);
