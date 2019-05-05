@@ -8,6 +8,7 @@ import { NetworkState } from "../store/network/types";
 
 interface Props {
   peerId: string | undefined;
+  updatePeerId: (value: string) => void;
 }
 function Host(props: Props) {
   const [peerId, setPeerId] = React.useState("");
@@ -15,6 +16,7 @@ function Host(props: Props) {
 
   function updatePeer() {
     createNewPeer(peerId);
+    props.updatePeerId(peerId);
     setPeerId("");
   }
   return (

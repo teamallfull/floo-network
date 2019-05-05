@@ -2,10 +2,10 @@ require("dotenv").config();
 import React, { useEffect, useMemo } from "react";
 import "./App.css";
 import Peer, { DataConnection } from "peerjs";
-import { Host } from "./components/Host";
 import Connection from "./components/Connection";
 import { SimpleMessage } from "./Types";
 import ChatHistory from "./components/ChatHistory";
+import Host from "./components/Host";
 
 type Network = {
   peer: Peer;
@@ -21,7 +21,7 @@ export const NetworkContext = React.createContext<Network | undefined>(
 );
 
 function NetworkProvider(props: any) {
-  const [peer, setPeer] = React.useState(new Peer("", { debug: 3 }));
+  const [peer] = React.useState(new Peer("", { debug: 3 }));
   const [connectionId, setConnectionId] = React.useState("");
   const [chats, setChats] = React.useState([]);
   const [connection, setConnection] = React.useState({});
@@ -77,20 +77,22 @@ export function useNetwork() {
     setChats([...chats, message]);
   };
 
-  if (peer) console.log("so much stuff");
-  peer.on("connection", conn => {
-    setConnectionId(conn);
-    updateGlobalChat({
-      author: "Them",
-      message: `You are now receiving messages from ${conn.peer}!`
-    });
-    conn.on("data", message => {
-      updateGlobalChatForThem({
+  // TODO: memoize this?
+  if (peer) {
+    peer.on("connection", conn => {
+      setConnectionId(conn);
+      updateGlobalChat({
         author: "Them",
-        message: `${message}!`
+        message: `You are now receiving messages from ${conn.peer}!`
+      });
+      conn.on("data", message => {
+        updateGlobalChatForThem({
+          author: "Them",
+          message: `${message}!`
+        });
       });
     });
-  });
+  }
 
   return {
     peer,
