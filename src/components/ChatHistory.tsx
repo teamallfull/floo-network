@@ -3,9 +3,9 @@ import { useNetwork } from "../App";
 
 const ChatHistory = () => {
   const [message, setMessage] = useState("");
-  const { chats, sendMessageToConnection, updateGlobalChat } = useNetwork();
+  const { chatState, sendMessageToConnection } = useNetwork();
   function renderChatMessages() {
-    return chats!.map((chat, index) => (
+    return chatState.chats!.map((chat, index) => (
       <div
         key={index}
         className={chat.author === "Them" ? "server-text" : "you-text"}
@@ -17,10 +17,6 @@ const ChatHistory = () => {
 
   function sendMessage() {
     sendMessageToConnection(message);
-    updateGlobalChat({
-      author: "You",
-      message
-    });
   }
 
   return (

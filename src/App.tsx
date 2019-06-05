@@ -1,19 +1,28 @@
 require("dotenv").config();
-import React, { useEffect, useMemo } from "react";
+import React, { useReducer, useState, useEffect, useMemo } from "react";
 import "./App.css";
-import Peer, { DataConnection } from "peerjs";
+import Peer from "peerjs";
 import Connection from "./components/Connection";
-import { SimpleMessage } from "./Types";
 import ChatHistory from "./components/ChatHistory";
 import Host from "./components/Host";
+import { store } from ".";
+import { networkReducer } from "./store/network/reducers";
+import {
+  UPDATE_PEER_ID,
+  UPDATE_CONNECTION_ID,
+  NetworkState,
+  NetworkActionTypes
+} from "./store/network/types";
+import { chatReducer } from "./store/chat/reducers";
+import { ChatState, ChatActionTypes } from "./store/chat/types";
 
 type Network = {
   peer: Peer;
-  connectionId: string;
-  chats: SimpleMessage[];
-  setConnectionId: Function;
-  setChats: Function;
-  connection: DataConnection;
+  networkState: NetworkState;
+  networkDispatch: React.Dispatch<NetworkActionTypes>;
+  chatState: ChatState;
+  chatDispatch: React.Dispatch<ChatActionTypes>;
+  setPeer: React.Dispatch<React.SetStateAction<Peer | undefined>>;
 };
 
 export const NetworkContext = React.createContext<Network | undefined>(
@@ -21,143 +30,111 @@ export const NetworkContext = React.createContext<Network | undefined>(
 );
 
 function NetworkProvider(props: any) {
-  const [peer] = React.useState(new Peer("", { debug: 3 }));
-  const [connectionId, setConnectionId] = React.useState("");
-  const [chats, setChats] = React.useState([]);
-  const [connection, setConnection] = React.useState({});
-  return (
-    <NetworkContext.Provider
-      value={{
-        peer,
-        connectionId,
-        chats,
-        setConnectionId,
-        setChats,
-        connection
-      }}
-      {...props}
-    />
+  const [peer, setPeer] = useState(undefined);
+  const [networkState, networkDispatch] = useReducer(
+    networkReducer,
+    store.getState().network
   );
+  const [chatState, chatDispatch] = useReducer(
+    chatReducer,
+    store.getState().chat
+  );
+
+  const value = useMemo(() => {
+    return {
+      peer,
+      setPeer,
+      networkState,
+      networkDispatch,
+      chatState,
+      chatDispatch
+    };
+  }, [peer, networkState, chatState]);
+  return <NetworkContext.Provider value={value} {...props} />;
 }
 
 export function useNetwork() {
   const context = React.useContext(NetworkContext);
+
   if (!context) {
     throw new Error(`useNetwork must be used within a NetworkProvider `);
   }
+
   let {
     peer,
-    chats,
-    connectionId,
-    setConnectionId,
-    setChats,
-    connection
+    setPeer,
+    networkState,
+    networkDispatch,
+    chatState,
+    chatDispatch
   } = context;
+  console.log("in network");
   const createNewPeer = (peerId: string) => {
-    context.peer = new Peer(peerId, { debug: 3 });
-    console.log("creating new peer");
+    networkDispatch({ type: UPDATE_PEER_ID, payload: peerId });
+    setPeer(new Peer(peerId, { debug: 3 }));
+    console.log("creating new peer", peerId);
   };
 
   const createConnection = (connectionId: string) => {
-    setConnectionId(connectionId);
-    if (context.peer) connection = context.peer.connect(connectionId);
-  };
-
-  const sendMessageToConnection = (message: string) => {
-    if (context.peer.connections[connectionId]) {
-      context.peer.connections[connectionId][0].send(message);
+    if (peer) {
+      networkDispatch({ type: UPDATE_CONNECTION_ID, payload: connectionId });
+      peer.connect(connectionId);
     }
   };
 
-  const updateGlobalChat = (message: SimpleMessage) => {
-    setChats([...chats, message]);
-  };
-
-  const updateGlobalChatForThem = (message: SimpleMessage) => {
-    setChats([...chats, message]);
+  const sendMessageToConnection = (message: string) => {
+    let connectionId = networkState.connectionId;
+    if (connectionId) {
+      if (peer.connections[connectionId]) {
+        chatDispatch({
+          type: "SEND_MESSAGE",
+          payload: {
+            author: "You",
+            message
+          }
+        });
+        peer.connections[connectionId][0].send(message);
+      }
+    }
   };
 
   // TODO: memoize this?
-  if (peer) {
-    peer.on("connection", conn => {
-      setConnectionId(conn);
-      updateGlobalChat({
-        author: "Them",
-        message: `You are now receiving messages from ${conn.peer}!`
+  useEffect(() => {
+    console.log("in effect");
+    if (peer) {
+      peer.on("error", err => {
+        console.log("error", err);
       });
-      conn.on("data", message => {
-        updateGlobalChatForThem({
-          author: "Them",
-          message: `${message}!`
+      peer.on("connection", conn => {
+        chatDispatch({
+          type: "SEND_MESSAGE",
+          payload: {
+            author: "Them",
+            message: `You are now receiving messages from ${conn.peer}!`
+          }
+        });
+        conn.on("data", message => {
+          chatDispatch({
+            type: "SEND_MESSAGE",
+            payload: {
+              author: "Them",
+              message: `${message}`
+            }
+          });
         });
       });
-    });
-  }
+    }
+  }, [peer]);
 
   return {
-    peer,
     createNewPeer,
     createConnection,
-    chats,
     sendMessageToConnection,
-    setConnectionId,
-    updateGlobalChat
+    networkState,
+    chatState
   };
 }
 function App() {
-  // createPeer = () => {
-  //   // TODO: Only create a peer that the user defines a name for
-  //   // currently in the state declaration, we create one
-  //   this.setState(
-  //     {
-  //       peer: new Peer(this.state.peerId, {
-  //         debug: 3
-  //       })
-  //     },
-
-  // openConnection = () => {
-  //   this.setState(
-  //     {
-  //       connection: this.state.peer.connect(this.state.connectionId)
-  //     },
-  //     this.connect
-  //   );
-  // };
-
-  // connect = () => {
-  //   this.state.connection.on("open", (msg: any) => {
-  //     this.state.connection.send("hi!");
-  //   });
-
-  //   this.state.connection.on("error", (error: any) => {
-  //     console.log(error);
-  //   });
-  // };
-
-  // handleConnectionId = (connectionId: string) => {
-  //   this.setState({
-  //     connectionId
-  //   });
-  // };
-
-  // updateMessage = (message: string) => {
-  //   this.setState({
-  //     message
-  //   });
-  // };
-
-  // updatePeerId = (peerId: string) => {
-  //   this.setState({ peerId });
-  // };
-
-  // sendMessage = () => {
-  //   this.state.connection.send(this.state.message);
-  //   this.props.sendMessage({
-  //     author: "You",
-  //     message: this.state.message
-  //   });
-  // };
-
   return (
     <div className="App">
       <div className="container">
