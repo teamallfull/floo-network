@@ -2,6 +2,8 @@ require("dotenv").config();
 import React, { Component } from "react";
 import "./App.css";
 import Peer from "peerjs";
+import { ConnectionProvider } from "./connection/ConnectionContext";
+import { Connection } from "./connection/Connection";
 
 interface SimpleMessage {
   author: string;
@@ -156,45 +158,30 @@ class App extends Component<{}, State> {
   render() {
     return (
       <div className="App">
-        <div className="container">
-          <div className="header">
-            <h1>Floo Network</h1>
-            {this.state.peerId ? (
-              <h3>Your Peer Id is {this.state.peerId}</h3>
-            ) : (
-              <h3>Please create a Peer Id</h3>
-            )}
-          </div>
-          <div className="connection">
+        <ConnectionProvider>
+          <div className="container">
+            <div className="header">
+              <h1>Floo Network</h1>
+              {this.state.peerId ? (
+                <h3>Your Peer Id is {this.state.peerId}</h3>
+              ) : (
+                <h3>Please create a Peer Id</h3>
+              )}
+            </div>
+            <Connection />
             <input
               type="text"
-              placeholder="Create a Unique Peer Id"
-              onChange={e => this.updatePeerId(e.target.value)}
+              onChange={e => this.updateMessage(e.target.value)}
             />
-            <button type="button" onClick={this.createPeer}>
-              Create Peer
+            <button type="button" onClick={this.sendMessage}>
+              Send Message
             </button>
-            <input
-              type="text"
-              placeholder="Enter Connection Id"
-              onChange={e => this.handleConnectionId(e.target.value)}
-            />
-            <button type="button" onClick={this.openConnection}>
-              Connect
+            <button type="button" onClick={this.call}>
+              Call
             </button>
+            <div className="chatbox">{this.renderChatMessages()}</div>
           </div>
-          <input
-            type="text"
-            onChange={e => this.updateMessage(e.target.value)}
-          />
-          <button type="button" onClick={this.sendMessage}>
-            Send Message
-          </button>
-          <button type="button" onClick={this.call}>
-            Call
-          </button>
-          <div className="chatbox">{this.renderChatMessages()}</div>
-        </div>
+        </ConnectionProvider>
       </div>
     );
   }
