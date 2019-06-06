@@ -15,6 +15,7 @@ export function ConnectionProvider(props: any) {
     peer.on("connection", dataConnection =>
       console.log("connected with details ", dataConnection)
     );
+    peer.on("error", err => console.log("err", err));
   }
 
   console.log("context");
