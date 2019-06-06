@@ -1,27 +1,34 @@
 import { ConnectionContext } from "./ConnectionContext";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 
 export function Connection() {
-  const { peer, setPeer } = useContext(ConnectionContext);
-  const [peerId, setPeerId] = useState("");
+  const { setPeer, peer } = useContext(ConnectionContext);
+  const [localPeerId, setLocalPeerId] = useState("");
+  const [connectionId, setConnectionId] = useState("");
+
   return (
     <div className="connection">
       <input
         type="text"
         placeholder="Create a Unique Peer Id"
-        onChange={e => setPeerId(e.target.value)}
+        onChange={e => setLocalPeerId(e.target.value)}
       />
-      <button type="button" onClick={() => setPeer(peerId)}>
+      <button
+        type="button"
+        onClick={() => {
+          setPeer(() => new Peer(localPeerId, { debug: 3 }));
+        }}
+      >
         Create Peer
       </button>
-      {/* <input
+      <input
         type="text"
         placeholder="Enter Connection Id"
-        onChange={e => this.handleConnectionId(e.target.value)}
+        onChange={e => setConnectionId(e.target.value)}
       />
-      <button type="button" onClick={this.openConnection}>
+      <button type="button" onClick={() => peer!.connect(connectionId)}>
         Connect
-      </button> */}
+      </button>
     </div>
   );
 }
