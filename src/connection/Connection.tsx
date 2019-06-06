@@ -15,6 +15,14 @@ export function Connection() {
   }, [peer]);
   return (
     <div className="connection">
+      <div className="header">
+        <h1>Floo Network</h1>
+        {peer ? (
+          <h3>Your Peer Id is {peer.id}</h3>
+        ) : (
+          <h3>Please Create a Peer</h3>
+        )}
+      </div>
       <input
         type="text"
         placeholder="Create a Unique Peer Id"

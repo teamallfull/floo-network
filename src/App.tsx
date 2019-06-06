@@ -1,5 +1,10 @@
 require("dotenv").config();
-import React, { Component, useContext, useEffect } from "react";
+import React, {
+  Component,
+  useContext,
+  useEffect,
+  useLayoutEffect
+} from "react";
 import "./App.css";
 import Peer from "peerjs";
 import {
@@ -14,22 +19,10 @@ interface SimpleMessage {
 }
 
 function App(props: any) {
-  const context = useContext(ConnectionContext);
-  useEffect(() => {
-    console.log("effecting");
-  }, [context.peer]);
   return (
     <div className="App">
       <ConnectionProvider>
         <div className="container">
-          <div className="header">
-            <h1>Floo Network</h1>
-            {context.peer ? (
-              <h3>Your Peer Id is {context.peer.id}</h3>
-            ) : (
-              <h3>Please Create a Peer</h3>
-            )}
-          </div>
           <Connection />
           <input type="text" onChange={e => () => {}} />
           <button type="button" onClick={() => {}}>
