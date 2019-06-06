@@ -3,7 +3,7 @@ import React, { useContext, useState, useEffect } from "react";
 import Peer from "peerjs";
 
 export function Connection() {
-  const { setPeer, peer } = useContext(ConnectionContext);
+  const { setPeer, peer, setConnection } = useContext(ConnectionContext);
   const [peerId, setPeerId] = useState("");
   const [peerCreated, setPeerCreated] = useState(false);
   const [connectionId, setConnectionId] = useState("");
@@ -13,6 +13,7 @@ export function Connection() {
       setPeerCreated(true);
     } else setPeerCreated(false);
   }, [peer]);
+
   return (
     <div className="connection">
       <div className="header">
@@ -43,7 +44,17 @@ export function Connection() {
             placeholder="Enter Connection Id"
             onChange={e => setConnectionId(e.target.value)}
           />
-          <button type="button" onClick={() => peer!.connect(connectionId)}>
+          <button
+            type="button"
+            onClick={() => {
+              // TODO: This might be able to be handled in the context via an event from the peer
+              // Also, not sure if we need to declare this variable first
+              // Give some thought to the location of this update to our app's state
+              // It seems OK, but I'm tired and it's a school night
+              const thing = peer!.connect(connectionId);
+              setConnection(thing);
+            }}
+          >
             Connect
           </button>
         </>
