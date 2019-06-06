@@ -18,6 +18,7 @@ export function ConnectionProvider(props: any) {
   }
 
   console.log("context");
+  console.log(peer);
 
   return (
     <ConnectionContext.Provider
