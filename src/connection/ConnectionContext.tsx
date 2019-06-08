@@ -8,6 +8,7 @@ type Connection = {
   setPeer: Function;
   setIncomingConnection: Function;
   setOutgoingConnection: Function;
+  messages: [];
 };
 export const ConnectionContext = createContext<Connection>({} as Connection);
 
@@ -21,6 +22,8 @@ export function ConnectionProvider(props: any) {
     outgoingConnection,
     setOutgoingConnection
   ] = useState<DataConnection | null>(null);
+
+  const [messages, setMessages] = useState([""]);
 
   if (peer) {
     peer.on("open", id => console.log(`Opening new peer with id: ${id}`));
@@ -36,7 +39,9 @@ export function ConnectionProvider(props: any) {
   }
 
   if (incomingConnection) {
-    console.log("hi! an incoming connection is received", incomingConnection);
+    incomingConnection.on("data", (data: any) => {
+      setMessages([...messages, data]);
+    });
   }
 
   if (outgoingConnection) {
@@ -44,6 +49,9 @@ export function ConnectionProvider(props: any) {
       "an outgoing connection is established with",
       outgoingConnection
     );
+    outgoingConnection.on("data", (data: any) => {
+      setMessages([...messages, data]);
+    });
   }
 
   console.log("context");
@@ -54,7 +62,8 @@ export function ConnectionProvider(props: any) {
         setPeer,
         incomingConnection, // currently unused
         outgoingConnection,
-        setOutgoingConnection
+        setOutgoingConnection,
+        messages
       }}
       {...props}
     />
