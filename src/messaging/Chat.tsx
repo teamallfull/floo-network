@@ -1,21 +1,24 @@
 import React, { useContext, useState, useEffect } from "react";
 import { ConnectionContext } from "../connection/ConnectionContext";
 export function Chat(props: any) {
-  const { connection } = useContext(ConnectionContext);
+  const { outgoingConnection } = useContext(ConnectionContext);
   const [message, setMessage] = useState("");
   const [connectionExists, setConnectionExists] = useState(false);
 
   useEffect(() => {
-    if (connection) {
+    if (outgoingConnection) {
       setConnectionExists(true);
     } else setConnectionExists(false);
-  }, [connection]);
+  }, [outgoingConnection]);
   return (
     <>
       {connectionExists && (
         <>
           <input type="text" onChange={e => setMessage(e.target.value)} />
-          <button type="button" onClick={() => connection.send(message)}>
+          <button
+            type="button"
+            onClick={() => outgoingConnection.send(message)}
+          >
             Send Message
           </button>
           <div className="chatbox" />

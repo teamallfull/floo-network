@@ -3,7 +3,9 @@ import React, { useContext, useState, useEffect } from "react";
 import Peer from "peerjs";
 
 export function Connection() {
-  const { setPeer, peer, setConnection } = useContext(ConnectionContext);
+  const { setPeer, peer, setOutgoingConnection } = useContext(
+    ConnectionContext
+  );
   const [peerId, setPeerId] = useState("");
   const [peerCreated, setPeerCreated] = useState(false);
   const [connectionId, setConnectionId] = useState("");
@@ -52,7 +54,7 @@ export function Connection() {
               // Give some thought to the location of this update to our app's state
               // It seems OK, but I'm tired and it's a school night
               const thing = peer!.connect(connectionId);
-              setConnection(thing);
+              setOutgoingConnection(thing);
             }}
           >
             Connect
