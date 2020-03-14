@@ -1,5 +1,5 @@
 import React, { useEffect, useState, createContext } from "react";
-import Peer, { DataConnection } from "peerjs";
+import Peer, { DataConnection, MediaConnection } from "peerjs";
 
 type Connection = {
   peer: Peer | null;
@@ -8,12 +8,18 @@ type Connection = {
   setPeer: Function;
   setIncomingConnection: Function;
   setOutgoingConnection: Function;
+  startCall: Function;
+  answerCall: Function;
+  call: MediaConnection;
+  mediaStream: MediaStream;
   messages: [];
+  callEstablished: boolean;
 };
 export const ConnectionContext = createContext<Connection>({} as Connection);
 
 export function ConnectionProvider(props: any) {
   const [peer, setPeer] = useState<Peer | null>(null);
+  const [callEstablished, setCallEstablished] = useState(false);
   const [
     incomingConnection,
     setIncomingConnection
@@ -25,8 +31,31 @@ export function ConnectionProvider(props: any) {
 
   const [messages, setMessages] = useState([""]);
 
+  const [call, setCall] = useState<MediaConnection | null>(null);
+  const [mediaStream, setMediaStream] = useState<MediaStream | undefined>(
+    undefined
+  );
+
+  async function startCall() {
+    if (peer) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true
+        });
+
+        peer.call(outgoingConnection?.peer!, stream);
+        // setMediaStream(stream);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+
   if (peer) {
-    peer.on("open", id => console.log(`Opening new peer with id: ${id}`));
+    peer.on("open", id => {
+      console.log(`Opening new peer with id: ${id}`);
+    });
     peer.on("connection", (dataConnection: DataConnection) => {
       console.log("Incoming Connection From: ", dataConnection);
       // TODO: Handle incoming connection. Maybe another context???
@@ -35,6 +64,14 @@ export function ConnectionProvider(props: any) {
     peer.on("error", err => {
       // TODO: Handle errors much more elegantly
       console.log("err", err);
+    });
+
+    peer.on("call", call => {
+      if (call.open === false) {
+        console.log("answering call");
+        call.answer(mediaStream);
+        setCall(call);
+      }
     });
   }
 
@@ -54,7 +91,13 @@ export function ConnectionProvider(props: any) {
     });
   }
 
-  console.log("context");
+  if (call) {
+    call.on("stream", stream => {
+      debugger;
+      setMediaStream(stream);
+    });
+  }
+
   return (
     <ConnectionContext.Provider
       value={{
@@ -63,7 +106,11 @@ export function ConnectionProvider(props: any) {
         incomingConnection, // currently unused
         outgoingConnection,
         setOutgoingConnection,
-        messages
+        messages,
+        startCall,
+        call,
+        callEstablished,
+        mediaStream
       }}
       {...props}
     />

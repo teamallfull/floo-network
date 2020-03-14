@@ -1,20 +1,43 @@
 import { ConnectionContext } from "./ConnectionContext";
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import Peer from "peerjs";
 
 export function Connection() {
-  const { setPeer, peer, setOutgoingConnection } = useContext(
-    ConnectionContext
-  );
+  const {
+    setPeer,
+    peer,
+    setOutgoingConnection,
+    outgoingConnection,
+    startCall,
+    call,
+    mediaStream,
+    callEstablished
+  } = useContext(ConnectionContext);
   const [peerId, setPeerId] = useState("");
   const [peerCreated, setPeerCreated] = useState(false);
   const [connectionId, setConnectionId] = useState("");
 
+  const videoRef = useRef(null);
+
   useEffect(() => {
     if (peer && peer.id) {
+      console.log("happy");
       setPeerCreated(true);
     } else setPeerCreated(false);
+  }, [peer?.id]);
+
+  useEffect(() => {
+    console.log("peer has been changed");
   }, [peer]);
+
+  const buildVideo = () => {
+    debugger;
+    let videoObj = videoRef.current;
+    // @ts-ignore
+    videoObj.srcObject = mediaStream;
+    // @ts-ignore
+    videoObj.play();
+  };
 
   return (
     <div className="connection">
@@ -61,6 +84,26 @@ export function Connection() {
           </button>
         </>
       )}
+      {outgoingConnection && (
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              startCall();
+              buildVideo();
+            }}
+          >
+            Call
+          </button>
+        </>
+      )}
+      {mediaStream && buildVideo()}
+      <video
+        style={{ height: 400, width: 400 }}
+        id="video-chat"
+        ref={videoRef}
+        autoPlay={true}
+      ></video>
     </div>
   );
 }

@@ -1,10 +1,10 @@
-require("dotenv").config();
 import React from "react";
 import "./App.css";
 import { ConnectionProvider } from "./connection/ConnectionContext";
 import { Connection } from "./connection/Connection";
 import { Chat } from "./messaging/Chat";
 import { ChatBox } from "./messaging/ChatBox";
+require("dotenv").config();
 
 function App() {
   return (
