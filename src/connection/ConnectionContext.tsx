@@ -1,4 +1,4 @@
-import React, { useEffect, useState, createContext } from "react";
+import React, { useState, createContext } from "react";
 import Peer, { DataConnection, MediaConnection } from "peerjs";
 
 type Connection = {
@@ -36,7 +36,9 @@ export function ConnectionProvider(props: any) {
     undefined
   );
 
+  // Handler for initiating a call with another user
   async function startCall() {
+    // TODO: This check should probably be `peer && outgoingConnection`
     if (peer) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -45,7 +47,6 @@ export function ConnectionProvider(props: any) {
         });
 
         peer.call(outgoingConnection?.peer!, stream);
-        // setMediaStream(stream);
       } catch (error) {
         console.error(error);
       }
@@ -62,7 +63,7 @@ export function ConnectionProvider(props: any) {
       setIncomingConnection(dataConnection);
     });
     peer.on("error", err => {
-      // TODO: Handle errors much more elegantly
+      // TODO: Handle errors much more elegantly, like showing them to the user and clearing them
       console.log("err", err);
     });
 

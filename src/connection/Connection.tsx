@@ -21,16 +21,19 @@ export function Connection() {
 
   useEffect(() => {
     if (peer && peer.id) {
-      console.log("happy");
       setPeerCreated(true);
     } else setPeerCreated(false);
+    // TODO: Look at exhaustive deps for the array below. THere's a plugin
   }, [peer?.id]);
 
   useEffect(() => {
+    // TODO: Delete me, this is just for testing state updates related to the peer object
     console.log("peer has been changed");
   }, [peer]);
 
   const buildVideo = () => {
+    // TODO: Make this safer, it's possible that the ref is null
+    // and we're ignoring all typescript warnings.
     let videoObj = videoRef.current;
     // @ts-ignore
     videoObj.srcObject = mediaStream;
@@ -89,6 +92,7 @@ export function Connection() {
             type="button"
             onClick={() => {
               startCall();
+              // TODO: Check if the below call is necessary, I don't think it is
               buildVideo();
             }}
           >
@@ -96,6 +100,7 @@ export function Connection() {
           </button>
         </>
       )}
+      {/* TODO: Maybe use the callEstablished piece of state as well.  */}
       {mediaStream && buildVideo()}
       <video
         style={{ height: 400, width: 400 }}
