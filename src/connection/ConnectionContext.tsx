@@ -93,7 +93,6 @@ export function ConnectionProvider(props: any) {
 
   if (call) {
     call.on("stream", stream => {
-      debugger;
       setMediaStream(stream);
     });
   }

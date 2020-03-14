@@ -31,7 +31,6 @@ export function Connection() {
   }, [peer]);
 
   const buildVideo = () => {
-    debugger;
     let videoObj = videoRef.current;
     // @ts-ignore
     videoObj.srcObject = mediaStream;
