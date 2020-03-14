@@ -8,6 +8,12 @@ In the tradition of our people, install all dependencies via `yarn install`.
 
 You can run the app on (default) port 3000 via `yarn start`. This will hot reload as well. For Production builds, fire off a `yarn build` to create the Production artifact.
 
+## Deploying
+
+If you're logged into the Heroku CLI, setup the remote tracking via: `heroku git:remote -a floonetwork`
+
+After you've been setup, do a `git push heroku master` whenever you want to push the changes from the `master` branch to Heroku.
+
 ## Architecture
 
 The Floo-Network is a React app in Typescript that (currently) heavily relies on the Context API for state management. The main dependency is `peerjs` for "easier" WebRTC communication.
